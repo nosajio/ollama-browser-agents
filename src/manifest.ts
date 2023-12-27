@@ -1,8 +1,8 @@
-import { defineManifest } from '@crxjs/vite-plugin'
-import packageData from '../package.json'
+import { defineManifest } from '@crxjs/vite-plugin';
+import packageData from '../package.json';
 
 export default defineManifest({
-  name: packageData.name,
+  name: 'LLM Agents',
   description: packageData.description,
   version: packageData.version,
   manifest_version: 3,
@@ -38,4 +38,4 @@ export default defineManifest({
     },
   ],
   permissions: ['sidePanel', 'storage'],
-})
+});
