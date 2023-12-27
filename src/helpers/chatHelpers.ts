@@ -1,6 +1,6 @@
-import Ollama, { Message } from './ollamaHelpers';
+import OllamaAi, { Message } from './ollamaHelpers';
 
-const model = new Ollama({
+const model = new OllamaAi({
   model: 'mistral',
   ollama_url: 'http://localhost:11434',
 });

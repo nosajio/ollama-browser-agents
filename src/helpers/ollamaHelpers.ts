@@ -1,43 +1,11 @@
+import type { Ollama } from '../types/ollama';
+
 export type LLMConfig = {
   model: 'mistral' | 'codellama' | 'llama';
   ollama_url: string;
 };
 
-type OllamaMessage = {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-};
-
-type OllamaChatRequestBody = {
-  model: string;
-  stream: boolean;
-  messages: OllamaMessage[];
-  format?: string;
-  template?: string;
-  options?: {
-    temperature?: number;
-  };
-};
-
-type OllamaRequestBody = OllamaChatRequestBody;
-
-type OllamaChatResponseBody = {
-  model: string;
-  created_at: string;
-  message: {
-    role: string;
-    content: string;
-  };
-  done: boolean;
-  total_duration: number;
-  load_duration: number;
-  prompt_eval_count: number;
-  prompt_eval_duration: number;
-  eval_count: number;
-  eval_duration: number;
-};
-
-export default class Ollama {
+export default class OllamaAi {
   constructor(
     private config: LLMConfig = {
       model: 'mistral',
@@ -49,7 +17,7 @@ export default class Ollama {
     path: `/api/${string}`,
     config: {
       method: 'get' | 'post';
-      body?: OllamaRequestBody;
+      body?: Ollama.RequestBody;
     } = {
       method: 'get',
     },
@@ -76,8 +44,8 @@ export default class Ollama {
     return response.json();
   }
 
-  async chat(messages: Message[], options?: OllamaChatRequestBody['options']) {
-    const chatBody: OllamaChatRequestBody = {
+  async chat(messages: Message[], options?: Ollama.ChatRequestBody['options']) {
+    const chatBody: Ollama.ChatRequestBody = {
       options,
       model: this.config.model,
       stream: false,
@@ -90,7 +58,7 @@ export default class Ollama {
     const res = (await this.request('/api/chat', {
       method: 'post',
       body: chatBody,
-    })) as OllamaChatResponseBody;
+    })) as Ollama.ChatResponseBody;
 
     return res.message.content;
   }
