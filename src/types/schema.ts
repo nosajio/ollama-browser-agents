@@ -1,12 +1,18 @@
-export type BaseAssistant = {
+export type BaseAgent = {
   name: string;
   sysPrompt: string;
   active: boolean;
-  opts?: AssistantOptions;
+  opts?: AgentOptions;
 };
 
-export type AssistantOptions = {
+export type AgentOptions = {
   expectBoolean?: boolean;
   useLLMChat?: boolean;
   includeSearchEngines?: boolean;
+};
+
+export type AgentResponse = {
+  agentName: string;
+  response: string;
+  time: Date;
 };

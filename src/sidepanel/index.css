@@ -1,4 +1,13 @@
 :root {
+  --color-000: #000;
+  --color-100: hsla(219, 43%, 9%, 1);
+  --color-150: hsla(222, 28%, 14%, 1);
+  --color-200: hsla(223, 21%, 19%, 1);
+  --color-400: hsla(228, 7%, 44%, 1);
+  --color-700: hsla(228, 6%, 66%, 1);
+  --color-900: hsla(220, 5%, 88%, 1);
+  --color-1000: #fff;
+
   font-family:
     system-ui,
     -apple-system,
@@ -13,16 +22,38 @@
     sans-serif;
 
   color-scheme: light dark;
-  background-color: #242424;
+  background-color: var(--color-200);
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    background-color: #fafafa;
+    background-color: var(--color-1000);
   }
 }
 
 body {
   min-width: 20rem;
   margin: 0;
+  font-size: 1rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.button {
+  display: inline-block;
+  background: var(--color-100);
+  color: var(--color-900);
+  border: none;
+  border-radius: 6px;
+  padding: 0.4096rem 1rem;
+  font-weight: 500;
+  font-size: 16px;
 }

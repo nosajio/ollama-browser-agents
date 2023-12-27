@@ -1,2 +1,30 @@
-main {
+.panel {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+}
+
+.panel__section {
+  border-bottom: 1px solid var(--color-100);
+  padding: 0rem 1rem 1rem;
+}
+
+.panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+
+  & .title {
+    color: var(--color-700);
+    font-family: SF Pro;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 113%; /* 18.08px */
+  }
+
+  & .button {
+    display: block;
+  }
 }

@@ -18,7 +18,7 @@ export declare module Ollama {
   };
 
   type OllamaMessage = {
-    role: 'user' | 'assistant' | 'system';
+    role: 'user' | 'agent' | 'system';
     content: string;
   };
 

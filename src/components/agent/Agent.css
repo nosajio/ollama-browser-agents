@@ -1,0 +1,28 @@
+.agent {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+}
+
+.agent__header {
+  display: flex;
+  justify-content: start;
+}
+
+.agent__title {
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--color-1000);
+  border-radius: 2px;
+  background: #0a7698;
+  padding: 1px 0.4096rem;
+}
+
+.agent__prompt {
+  color: var(--color-700);
+  font-family: SF Pro;
+  font-size: 16px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 125%;
+}

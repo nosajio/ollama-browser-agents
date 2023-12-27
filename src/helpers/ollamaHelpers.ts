@@ -66,7 +66,7 @@ export default class OllamaAi {
 
 export type MessageConfig = {
   text: string;
-  role: 'user' | 'system' | 'assistant';
+  role: 'user' | 'system' | 'agent';
 };
 
 export class Message {
@@ -102,6 +102,6 @@ export class HumanMessage extends Message {
 
 export class AIMessage extends Message {
   constructor(text: string) {
-    super({ text, role: 'assistant' });
+    super({ text, role: 'agent' });
   }
 }
