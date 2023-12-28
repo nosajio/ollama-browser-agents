@@ -1,6 +1,12 @@
 import Turndown from 'turndown';
+import { marked } from 'marked';
 
 const td = new Turndown();
+
+export async function markdownToHtml(markdown: string) {
+  const html = await marked.parse(markdown);
+  return html;
+}
 
 export function htmlToMarkdown(html: string) {
   const parser = new DOMParser();

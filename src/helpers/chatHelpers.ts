@@ -1,4 +1,5 @@
 import type { AgentResponse, BaseAgent } from '../types/schema';
+import { markdownToHtml } from './dataHelpers';
 import OllamaAi, { HumanMessage, Message, SystemMessage } from './ollamaHelpers';
 import { globalSysPrompt } from './promptHelpers';
 
@@ -14,7 +15,7 @@ const model = new OllamaAi({
 });
 
 export async function getChatResponse(messages: Message[]) {
-  const response = model.chat(messages);
+  const response = await model.chat(messages);
   return response;
 }
 
@@ -62,8 +63,10 @@ export async function getResponseFromAgents(
     ];
   });
   const rawResponses = await Promise.all(messageThreads.map((thread) => model.chat(thread)));
+  console.log('Response from LLM');
   console.log(rawResponses);
-  const responses = rawResponses.map<AgentResponse>((res, i) => ({
+  const htmlResponses = await Promise.all(rawResponses.map((res) => markdownToHtml(res)));
+  const responses = htmlResponses.map<AgentResponse>((res, i) => ({
     agentName: agents[i].name,
     url: context.url,
     response: res,

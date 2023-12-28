@@ -29,7 +29,52 @@
 }
 
 .agent__response {
-  line-height: 156%;
+  position: relative;
+
+  & .scrollover {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 20px;
+    background: linear-gradient(to bottom, hsla(223, 21%, 19%, 0), hsla(223, 21%, 19%, 1));
+  }
+
+  & .agent__output {
+    line-height: 156%;
+    max-height: 13lh;
+    overflow: scroll;
+    /* Compensate for scrollover el */
+    padding-bottom: 20px;
+  }
+
+  & .agent__output.noscrollover {
+    padding-bottom: 0;
+  }
+
+  & p {
+    margin: 0;
+  }
+
+  & p + p {
+    margin-top: 0.4096rem;
+  }
+
+  & ol,
+  & ul {
+    margin: 0;
+    padding-left: 1rem;
+  }
+
+  & ol li,
+  & ul li {
+    margin-top: 0.4096rem;
+  }
+
+  & ol li::marker,
+  & ul li::marker {
+    color: var(--color-700);
+  }
 }
 
 .agent__delete {

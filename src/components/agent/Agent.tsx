@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { AgentResponse, BaseAgent } from '../../types/schema';
 import './Agent.css';
 
@@ -34,12 +35,29 @@ export function Agent({
 }
 
 function Formatted({ children }: { children: string }) {
-  const childrenArray = children.split('\n');
+  const outputEl = useRef<HTMLDivElement>(null);
+  const [showScrollover, setShowScrollover] = useState(false);
+
+  useEffect(() => {
+    if (!outputEl.current) {
+      return;
+    }
+    const { scrollHeight, parentElement } = outputEl.current;
+    if (!parentElement) {
+      return;
+    }
+    const { scrollHeight: parentScrollHeight } = parentElement;
+    setShowScrollover(scrollHeight > parentScrollHeight);
+  }, []);
+
   return (
-    <div className="agent__reaspose">
-      {childrenArray.map((c, i) => (
-        <p key={i}>{c}</p>
-      ))}
+    <div className="agent__response">
+      <div
+        className={`agent__output ${!showScrollover ? 'noscrollover' : ''}`}
+        ref={outputEl}
+        dangerouslySetInnerHTML={{ __html: children }}
+      />
+      {showScrollover && <div className="scrollover" />}
     </div>
   );
 }
