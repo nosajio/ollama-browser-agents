@@ -23,9 +23,20 @@ export function Agent({
         </div>
       </header>
       <div className="agent__prompt">{sysPrompt}</div>
-      {response && state === 'idle' && <div className="agent__response">{response.response}</div>}
+      {response && state === 'idle' && <Formatted>{response.response}</Formatted>}
       {state === 'loading' && <div className="agent__response">...</div>}
     </section>
+  );
+}
+
+function Formatted({ children }: { children: string }) {
+  const childrenArray = children.split('\n');
+  return (
+    <div className="agent__reaspose">
+      {childrenArray.map((c, i) => (
+        <p key={i}>{c}</p>
+      ))}
+    </div>
   );
 }
 
