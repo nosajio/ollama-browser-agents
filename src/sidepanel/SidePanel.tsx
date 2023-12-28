@@ -17,10 +17,10 @@ export default function SidePanel() {
   const apiLock = useRef(false);
 
   const handleSaveAgent = async (agent: BaseAgent) => {
-    console.log('save agent', agent);
     const updatedAgents = await upsertAgent(agent, true);
     if (!updatedAgents) return;
     setAllAgents(updatedAgents);
+    setUIMode('all');
   };
 
   const getActiveTabMarkdown = async (tabId: number) => {
@@ -49,18 +49,6 @@ export default function SidePanel() {
     setAgentsLoading(false);
   }, []);
 
-  // const handleUpdateAgent = async (tabId: number, agentName: string) => {
-  //   const md = await getActiveTabMarkdown(tabId);
-  //   if (!md) return;
-  //   const agent = allAgents.find((a) => a.name === agentName);
-  //   if (!agent) {
-  //     console.error('Update agent: Agent not found');
-  //     return;
-  //   }
-  //   const [response] = await getResponseFromAgents([agent], md);
-  //   if (!response) return;
-  // };
-
   useEffect(() => {
     const handleTabChanged = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
       if (changeInfo.status === 'complete') {
@@ -77,12 +65,11 @@ export default function SidePanel() {
   useEffect(() => {
     (async () => {
       const agents = await getStoredAgents();
-      console.log('stored agents', agents);
+      console.log('stored agents: %o', agents);
       setAllAgents(agents);
       // const currentTab = await chrome.tabs.captureVisibleTab();
       const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!currentTab?.id || currentTab.status !== 'complete') return;
-      console.log(currentTab);
       handleUpdateAgents(currentTab.id, agents);
     })();
   }, [handleUpdateAgents]);
@@ -126,6 +113,11 @@ function MainView({ onModeChange, agents, agentsLoading, responses }: MainViewPr
         </button>
       </header>
       <section className="panel__main panel__section">
+        {agents.length === 0 && (
+          <button className="button" onClick={handleModeChange('new-agent')}>
+            + Add first agent
+          </button>
+        )}
         <ErrorBoundary fallback={<div>Error with agents</div>} onError={(e) => console.error(e)}>
           {agents.map((a, i) => (
             <Agent
@@ -159,6 +151,10 @@ function NewAgentView({ onSave, onModeChange }: NewAgentViewProps) {
     const includeSearchEngines = form.get('includeSearchEngines') === 'true';
     const useLLMChat = form.get('useLLMChat') === 'true';
 
+    if (!name || !sysPrompt) {
+      return;
+    }
+
     const agent: BaseAgent = {
       active: true,
       name,
@@ -169,47 +165,50 @@ function NewAgentView({ onSave, onModeChange }: NewAgentViewProps) {
         useLLMChat,
       },
     };
+
     onSave(agent);
   };
 
   return (
-    <form onSubmit={handleSave}>
-      <header className="panel__header">
-        <h1 className="panel__title">New Agent</h1>
-        <button className="panel__header-button" onClick={handleModeChange('all')}>
-          Cancel
-        </button>
-
-        <button className="panel__header-button bg-green">Save</button>
+    <form onSubmit={handleSave} className="form">
+      <header className="panel__header panel__section">
+        <h1 className="title">New Agent</h1>
+        <div className="actions">
+          <button className="button bg-red" onClick={handleModeChange('all')}>
+            Cancel
+          </button>
+          <button className="button bg-green">Save</button>
+        </div>
       </header>
-      <section className="panel__main">
+      <section className="panel__main panel__section form-rows">
         <label className="form-row">
-          <div className="form-row__label">Name</div>
-          <input className="form-row__input" placeholder="Agent name..." type="text" name="name" />
+          <div className="label">Name</div>
+          <input className="input" placeholder="Agent name..." type="text" name="name" required />
         </label>
         <label className="form-row">
-          <div className="form-row__label">Instruct</div>
+          <div className="label">Instruct</div>
           <textarea
-            className="form-row__input"
+            className="input"
             name="sysPrompt"
             placeholder="What should it do?.."
+            required
           />
         </label>
-        <label className="form-row">
-          <div className="form-row__label">Settings</div>
-          <label className="form-row__input">
+        <div className="form-row">
+          <div className="label">Settings</div>
+          <label className="checkbox">
             <input type="checkbox" name="expectBoolean" />
             <span>Expect Boolean</span>
           </label>
-          <label className="form-row__input">
+          <label className="checkbox">
             <input type="checkbox" name="includeSearchEngines" />
             <span>Include Search Engines</span>
           </label>
-          <label className="form-row__input">
+          <label className="checkbox">
             <input type="checkbox" name="useLLMChat" />
             <span>Use LLM Chat</span>
           </label>
-        </label>
+        </div>
       </section>
     </form>
   );

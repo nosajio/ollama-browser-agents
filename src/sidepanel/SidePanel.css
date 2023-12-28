@@ -27,4 +27,54 @@
   & .button {
     display: block;
   }
+
+  & .actions {
+    display: flex;
+    column-gap: 1rem;
+  }
+}
+
+/* New form */
+.form {
+  display: block;
+}
+
+.form-rows {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+  padding-top: 1rem;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.4096rem;
+
+  & .label {
+    color: var(--color-700);
+    line-height: 113%;
+  }
+
+  & .input {
+    border-radius: 7px;
+    background: var(--color-150);
+    border: none;
+    outline: none;
+    padding: 0.64rem 0.8rem;
+  }
+
+  & .input:focus {
+    background: var(--color-100);
+  }
+
+  & .input::placeholder {
+    color: var(--color-400);
+  }
+
+  & .checkbox {
+    padding: 0.2048rem 0;
+    display: flex;
+    column-gap: 0.4096rem;
+  }
 }

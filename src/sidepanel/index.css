@@ -56,4 +56,22 @@ h6 {
   padding: 0.4096rem 1rem;
   font-weight: 500;
   font-size: 16px;
+  cursor: pointer;
+  transition: all 100ms ease;
+
+  &.bg-red {
+    background: #371b27;
+  }
+
+  &.bg-red:hover {
+    background: #5c2b2c;
+  }
+
+  &.bg-green {
+    background: #144a30;
+  }
+
+  &.bg-green:hover {
+    background: #196d44;
+  }
 }
