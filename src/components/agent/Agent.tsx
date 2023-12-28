@@ -24,7 +24,11 @@ export function Agent({
       </header>
       <div className="agent__prompt">{sysPrompt}</div>
       {response && state === 'idle' && <Formatted>{response.response}</Formatted>}
-      {state === 'loading' && <div className="agent__response">...</div>}
+      {state === 'loading' && (
+        <div className="agent__response">
+          <Loading />
+        </div>
+      )}
     </section>
   );
 }
@@ -36,6 +40,16 @@ function Formatted({ children }: { children: string }) {
       {childrenArray.map((c, i) => (
         <p key={i}>{c}</p>
       ))}
+    </div>
+  );
+}
+
+function Loading() {
+  return (
+    <div className="loading">
+      <span>.</span>
+      <span>.</span>
+      <span>.</span>
     </div>
   );
 }
