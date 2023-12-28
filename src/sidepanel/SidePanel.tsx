@@ -1,4 +1,4 @@
-import { FormEventHandler, useCallback, useEffect, useRef, useState } from 'react';
+import { FormEventHandler, useCallback, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Agent } from '../components/agent/Agent';
 import { getResponseFromAgents, getTabHTML } from '../helpers/chatHelpers';
@@ -14,7 +14,6 @@ export default function SidePanel() {
   const [uiMode, setUIMode] = useState<SidePanelModes>('all');
   const [allAgents, setAllAgents] = useState<BaseAgent[]>([]);
   const [agentResponses, setAgentResponses] = useState<AgentResponse[]>();
-  const apiLock = useRef(false);
 
   const handleDeleteAgent = (agent: BaseAgent) => {
     const updatedAgents = allAgents.filter((a) => a.name !== agent.name);
@@ -40,19 +39,16 @@ export default function SidePanel() {
   };
 
   const handleUpdateAgents = useCallback(async (tab: chrome.tabs.Tab, agents: BaseAgent[]) => {
-    if (apiLock.current || agents.length === 0 || !tab?.id || !tab?.url) return;
+    if (agents.length === 0 || !tab?.id || !tab?.url) return;
     setAgentsLoading(true);
-    apiLock.current = true;
     const md = await getActiveTabMarkdown(tab.id);
     if (!md) {
       setAgentsLoading(false);
-      apiLock.current = false;
       console.error('No page markdown');
       return;
     }
     const responses = await getResponseFromAgents(agents, { markdown: md, url: tab.url });
     setAgentResponses(responses);
-    apiLock.current = false;
     setAgentsLoading(false);
   }, []);
 

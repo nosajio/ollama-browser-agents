@@ -6,6 +6,8 @@ export type LLMConfig = {
 };
 
 export default class OllamaAi {
+  private requests: { [url: string]: AbortController }[] = [];
+
   constructor(
     private config: LLMConfig = {
       model: 'mistral',
@@ -22,11 +24,31 @@ export default class OllamaAi {
       method: 'get',
     },
   ) {
+    const url = new URL(path, this.config?.ollama_url);
+
+    // If request in in progress, don't make a new one
+    const existingRequest = this.requests.find((r) => Object.keys(r)[0] === url.toString());
+    if (existingRequest) {
+      console.log('request in progress for URL');
+      return;
+    }
+
+    // If the URL has changed, cancel all in progress requests
+    this.requests.forEach((r) => {
+      const key = Object.keys(r)[0];
+      r[key].abort();
+    });
+    this.requests = [];
+
+    // Build the new request
+    const controller = new AbortController();
+    this.requests.push({
+      [url.toString()]: controller,
+    });
     const request: RequestInit = {
       method: config.method.toUpperCase(),
+      signal: controller.signal,
     };
-
-    const url = new URL(path, this.config?.ollama_url);
 
     // Add the encoded body
     if (config.method !== 'get' && config.body) {
@@ -61,6 +83,15 @@ export default class OllamaAi {
     })) as Ollama.ChatResponseBody;
 
     return res.message.content;
+  }
+
+  async abortAll() {
+    this.requests.forEach((r) => {
+      const key = Object.keys(r)[0];
+      console.log('abort request: %s', key);
+      r[key].abort();
+    });
+    this.requests = [];
   }
 }
 

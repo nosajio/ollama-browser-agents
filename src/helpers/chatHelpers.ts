@@ -51,6 +51,10 @@ export async function getResponseFromAgents(
     console.warn('No agents passed to getResponseFromAgents');
     return [];
   }
+
+  // Abort all pending requests
+  model.abortAll();
+
   const messageThreads = agents.map((agent) => {
     return [
       new SystemMessage(globalSysPrompt(context.markdown, context.url)),
