@@ -1,18 +1,20 @@
-import { FormEventHandler, useEffect, useState } from 'react';
+import { FormEventHandler, useCallback, useEffect, useRef, useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import { Agent } from '../components/agent/Agent';
-import { getTabHTML } from '../helpers/chatHelpers';
+import { getResponseFromAgents, getTabHTML } from '../helpers/chatHelpers';
+import { htmlToMarkdown } from '../helpers/dataHelpers';
 import { getStoredAgents, upsertAgent } from '../helpers/storageHelpers';
 import { AgentResponse, type BaseAgent } from '../types/schema';
 import './SidePanel.css';
-import { htmlToMarkdown } from '../helpers/dataHelpers';
-import { ErrorBoundary } from 'react-error-boundary';
 
 type SidePanelModes = 'new-agent' | 'all';
 
 export default function SidePanel() {
+  const [agentsLoading, setAgentsLoading] = useState(false);
   const [uiMode, setUIMode] = useState<SidePanelModes>('all');
   const [allAgents, setAllAgents] = useState<BaseAgent[]>([]);
   const [agentResponses, setAgentResponses] = useState<AgentResponse[]>();
+  const apiLock = useRef(false);
 
   const handleSaveAgent = async (agent: BaseAgent) => {
     console.log('save agent', agent);
@@ -21,52 +23,81 @@ export default function SidePanel() {
     setAllAgents(updatedAgents);
   };
 
-  const handleUpdateAgents = async (tabId: number) => {
+  const getActiveTabMarkdown = async (tabId: number) => {
     const pageHTML = await getTabHTML(tabId);
     if (typeof pageHTML !== 'string') {
       console.error('No page HTML');
       return;
     }
-    const pageMarkdown = htmlToMarkdown(pageHTML);
-    console.log(pageMarkdown);
+    return htmlToMarkdown(pageHTML);
   };
 
+  const handleUpdateAgents = useCallback(async (tabId: number, agents: BaseAgent[]) => {
+    if (apiLock.current || agents.length === 0) return;
+    setAgentsLoading(true);
+    apiLock.current = true;
+    const md = await getActiveTabMarkdown(tabId);
+    if (!md) {
+      setAgentsLoading(false);
+      apiLock.current = false;
+      console.error('No page markdown');
+      return;
+    }
+    const responses = await getResponseFromAgents(agents, md);
+    setAgentResponses(responses);
+    apiLock.current = false;
+    setAgentsLoading(false);
+  }, []);
+
+  // const handleUpdateAgent = async (tabId: number, agentName: string) => {
+  //   const md = await getActiveTabMarkdown(tabId);
+  //   if (!md) return;
+  //   const agent = allAgents.find((a) => a.name === agentName);
+  //   if (!agent) {
+  //     console.error('Update agent: Agent not found');
+  //     return;
+  //   }
+  //   const [response] = await getResponseFromAgents([agent], md);
+  //   if (!response) return;
+  // };
+
   useEffect(() => {
-    const handleTabChanged = (
-      tabId: number,
-      changeInfo: chrome.tabs.TabChangeInfo,
-      tab: chrome.tabs.Tab,
-    ) => {
+    const handleTabChanged = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
       if (changeInfo.status === 'complete') {
-        handleUpdateAgents(tabId);
+        handleUpdateAgents(tabId, allAgents);
       }
     };
-    chrome.tabs.onUpdated.addListener((tabId, info, tab) => {
-      if (info.status === 'complete') {
-        handleTabChanged(tabId, info, tab);
-      }
-    });
+    chrome.tabs.onUpdated.addListener(handleTabChanged);
     return () => {
       chrome.tabs.onUpdated.removeListener(handleTabChanged);
     };
-  }, []);
+  }, [allAgents, handleUpdateAgents]);
 
   // Get all agents in state on load
   useEffect(() => {
     (async () => {
       const agents = await getStoredAgents();
+      console.log('stored agents', agents);
       setAllAgents(agents);
+      // const currentTab = await chrome.tabs.captureVisibleTab();
+      const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!currentTab?.id || currentTab.status !== 'complete') return;
+      console.log(currentTab);
+      handleUpdateAgents(currentTab.id, agents);
     })();
-  }, []);
+  }, [handleUpdateAgents]);
 
   return (
     <main className="panel">
-      <ErrorBoundary fallback={<div>Error</div>}>
-        {uiMode === 'all' && <MainView onModeChange={setUIMode} agents={allAgents} />}
-        {uiMode === 'new-agent' && (
-          <NewAgentView onModeChange={setUIMode} onSave={handleSaveAgent} />
-        )}
-      </ErrorBoundary>
+      {uiMode === 'all' && (
+        <MainView
+          onModeChange={setUIMode}
+          agents={allAgents}
+          responses={agentResponses}
+          agentsLoading={agentsLoading}
+        />
+      )}
+      {uiMode === 'new-agent' && <NewAgentView onModeChange={setUIMode} onSave={handleSaveAgent} />}
     </main>
   );
 }
@@ -77,9 +108,11 @@ type ViewProps = {
 
 type MainViewProps = ViewProps & {
   agents: BaseAgent[];
+  responses?: AgentResponse[];
+  agentsLoading?: boolean;
 };
 
-function MainView({ onModeChange, agents }: MainViewProps) {
+function MainView({ onModeChange, agents, agentsLoading, responses }: MainViewProps) {
   const handleModeChange = (mode: SidePanelModes) => () => {
     onModeChange(mode);
   };
@@ -93,9 +126,16 @@ function MainView({ onModeChange, agents }: MainViewProps) {
         </button>
       </header>
       <section className="panel__main panel__section">
-        {agents.map((a, i) => (
-          <Agent agent={a} key={i} />
-        ))}
+        <ErrorBoundary fallback={<div>Error with agents</div>} onError={(e) => console.error(e)}>
+          {agents.map((a, i) => (
+            <Agent
+              state={agentsLoading ? 'loading' : 'idle'}
+              agent={a}
+              response={responses?.[i]}
+              key={i}
+            />
+          ))}
+        </ErrorBoundary>
       </section>
     </>
   );

@@ -1,7 +1,7 @@
-import type { Ollama } from '../types/ollama';
+import type * as Ollama from '../types/ollama';
 
 export type LLMConfig = {
-  model: 'mistral' | 'codellama' | 'llama';
+  model: 'mistral' | 'codellama' | 'llama2';
   ollama_url: string;
 };
 
