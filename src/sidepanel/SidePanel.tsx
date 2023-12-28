@@ -2,7 +2,7 @@ import { FormEventHandler, useCallback, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Agent } from '../components/agent/Agent';
 import { getResponseFromAgents, getTabHTML } from '../helpers/chatHelpers';
-import { htmlToMarkdown } from '../helpers/dataHelpers';
+import { htmlToMarkdown, randomColor } from '../helpers/dataHelpers';
 import { getStoredAgents, replaceAgents, upsertAgent } from '../helpers/storageHelpers';
 import { AgentResponse, type BaseAgent } from '../types/schema';
 import './SidePanel.css';
@@ -178,6 +178,7 @@ function NewAgentView({ onSave, onModeChange }: NewAgentViewProps) {
       active: true,
       name,
       sysPrompt,
+      color: randomColor(),
       opts: {
         expectBoolean,
         includeSearchEngines,

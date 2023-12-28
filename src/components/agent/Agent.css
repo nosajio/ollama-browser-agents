@@ -2,6 +2,26 @@
   display: flex;
   flex-direction: column;
   row-gap: 1rem;
+
+  & + .agent {
+    border-top: 1px solid var(--color-100);
+  }
+}
+
+.title-blue {
+  background: #0a7698;
+}
+.title-green {
+  background: #2f7246;
+}
+.title-red {
+  background: #722f2f;
+}
+.title-purple {
+  background: #722f57;
+}
+.title-yellow {
+  background: #72672f;
 }
 
 .agent__header {
@@ -15,7 +35,6 @@
   font-size: 1rem;
   color: var(--color-1000);
   border-radius: 2px;
-  background: #0a7698;
   padding: 1px 0.4096rem;
 }
 

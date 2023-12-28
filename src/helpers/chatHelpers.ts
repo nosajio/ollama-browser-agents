@@ -1,7 +1,7 @@
 import type { AgentResponse, BaseAgent } from '../types/schema';
 import { markdownToHtml } from './dataHelpers';
 import OllamaAi, { HumanMessage, Message, SystemMessage } from './ollamaHelpers';
-import { globalSysPrompt } from './promptHelpers';
+import { globalSysPrompt, userPrompt } from './promptHelpers';
 
 const ollamaURL = import.meta.env.VITE_OLLAMA_API_URL;
 if (!ollamaURL) {
@@ -59,7 +59,7 @@ export async function getResponseFromAgents(
   const messageThreads = agents.map((agent) => {
     return [
       new SystemMessage(globalSysPrompt(context.markdown, context.url)),
-      new HumanMessage(agent.sysPrompt),
+      new HumanMessage(userPrompt(agent.name, agent.sysPrompt)),
     ];
   });
   const rawResponses = await Promise.all(messageThreads.map((thread) => model.chat(thread)));

@@ -1,5 +1,6 @@
-import Turndown from 'turndown';
 import { marked } from 'marked';
+import Turndown from 'turndown';
+import { BaseAgent } from '../types/schema';
 
 const td = new Turndown();
 
@@ -25,4 +26,24 @@ function cleanNonTextContentFromHTML(doc: Document) {
     el.remove();
   });
   return doc.body;
+}
+
+export function assertBaseAgent(agent: BaseAgent | null): asserts agent is BaseAgent {
+  if (!agent) throw new Error('Agent not found');
+  if (!('name' in agent)) throw new Error('Agent missing name');
+  if (!('sysPrompt' in agent)) throw new Error('Agent missing sysPrompt');
+  if (!('color' in agent)) throw new Error('Agent missing color');
+}
+
+export function assertBaseAgentArray(agents: BaseAgent[]): asserts agents is BaseAgent[] {
+  if (!Array.isArray(agents)) throw new Error('Agents not found');
+  agents.forEach((agent) => {
+    assertBaseAgent(agent);
+  });
+}
+
+export function randomColor() {
+  const colors = ['blue', 'green', 'red', 'purple', 'yellow'] as const;
+  const i = Math.floor(Math.random() * colors.length);
+  return colors[i];
 }

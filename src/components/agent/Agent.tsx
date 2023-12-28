@@ -13,12 +13,12 @@ export function Agent({
   onDelete,
   response,
   state = 'idle',
-  agent: { name, sysPrompt },
+  agent: { name, sysPrompt, color },
 }: AgentProps) {
   return (
     <section className="agent">
       <header className="agent__header">
-        <h2 className="agent__title">{name}</h2>
+        <h2 className={`agent__title title-${color}`}>{name}</h2>
         <div className="agent__delete">
           <DeleteIcon onClick={onDelete} />
         </div>

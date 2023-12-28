@@ -20,3 +20,8 @@ ${content}
 
 ---
 `;
+
+export const userPrompt = (name: string, instruct: string) => `
+  # ${name}
+  ${instruct}
+`;

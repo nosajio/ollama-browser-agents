@@ -1,7 +1,10 @@
+export type AgentColor = 'blue' | 'green' | 'red' | 'purple' | 'yellow';
+
 export type BaseAgent = {
   name: string;
   sysPrompt: string;
   active: boolean;
+  color: AgentColor;
   opts?: AgentOptions;
 };
 

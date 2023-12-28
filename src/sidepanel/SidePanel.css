@@ -6,14 +6,13 @@
 
 .panel__section {
   border-bottom: 1px solid var(--color-100);
-  padding: 0rem 1rem 1rem;
 }
 
 .panel__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 1rem;
+  padding: 1rem;
 
   & .title {
     color: var(--color-700);
@@ -32,6 +31,10 @@
     display: flex;
     column-gap: 1rem;
   }
+}
+
+.panel__main {
+  padding: 0 1rem 1rem;
 }
 
 /* New form */
