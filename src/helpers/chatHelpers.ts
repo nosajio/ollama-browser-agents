@@ -24,6 +24,11 @@ export async function getTabHTML(tabId: number) {
     return;
   }
 
+  if (!Array.isArray(domRes) || domRes.length === 0) {
+    console.error('No DOM response');
+    return;
+  }
+
   return domRes[0].result;
 }
 
@@ -32,7 +37,10 @@ export async function getTabHTML(tabId: number) {
  */
 export async function getResponseFromAgents(
   agents: BaseAgent[],
-  context: string,
+  context: {
+    markdown: string;
+    url: string;
+  },
 ): Promise<AgentResponse[]> {
   if (!agents.length) {
     console.warn('No agents passed to getResponseFromAgents');
@@ -42,13 +50,14 @@ export async function getResponseFromAgents(
     return [
       new SystemMessage(globalSysPrompt()),
       new HumanMessage(agent.sysPrompt),
-      new HumanMessage(contextPrompt(context)),
+      new HumanMessage(contextPrompt(context.markdown)),
     ];
   });
   const rawResponses = await Promise.all(messageThreads.map((thread) => model.chat(thread)));
   console.log(rawResponses);
   const responses = rawResponses.map<AgentResponse>((res, i) => ({
     agentName: agents[i].name,
+    url: context.url,
     response: res,
     time: new Date(),
   }));

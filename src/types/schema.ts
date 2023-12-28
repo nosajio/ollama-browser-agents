@@ -14,5 +14,6 @@ export type AgentOptions = {
 export type AgentResponse = {
   agentName: string;
   response: string;
+  url: string;
   time: Date;
 };

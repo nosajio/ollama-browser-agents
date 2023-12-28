@@ -3,7 +3,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { Agent } from '../components/agent/Agent';
 import { getResponseFromAgents, getTabHTML } from '../helpers/chatHelpers';
 import { htmlToMarkdown } from '../helpers/dataHelpers';
-import { getStoredAgents, upsertAgent } from '../helpers/storageHelpers';
+import { getStoredAgents, replaceAgents, upsertAgent } from '../helpers/storageHelpers';
 import { AgentResponse, type BaseAgent } from '../types/schema';
 import './SidePanel.css';
 
@@ -15,6 +15,12 @@ export default function SidePanel() {
   const [allAgents, setAllAgents] = useState<BaseAgent[]>([]);
   const [agentResponses, setAgentResponses] = useState<AgentResponse[]>();
   const apiLock = useRef(false);
+
+  const handleDeleteAgent = (agent: BaseAgent) => {
+    const updatedAgents = allAgents.filter((a) => a.name !== agent.name);
+    setAllAgents(updatedAgents);
+    replaceAgents(updatedAgents);
+  };
 
   const handleSaveAgent = async (agent: BaseAgent) => {
     const updatedAgents = await upsertAgent(agent, true);
@@ -32,27 +38,31 @@ export default function SidePanel() {
     return htmlToMarkdown(pageHTML);
   };
 
-  const handleUpdateAgents = useCallback(async (tabId: number, agents: BaseAgent[]) => {
-    if (apiLock.current || agents.length === 0) return;
+  const handleUpdateAgents = useCallback(async (tab: chrome.tabs.Tab, agents: BaseAgent[]) => {
+    if (apiLock.current || agents.length === 0 || !tab?.id || !tab?.url) return;
     setAgentsLoading(true);
     apiLock.current = true;
-    const md = await getActiveTabMarkdown(tabId);
+    const md = await getActiveTabMarkdown(tab.id);
     if (!md) {
       setAgentsLoading(false);
       apiLock.current = false;
       console.error('No page markdown');
       return;
     }
-    const responses = await getResponseFromAgents(agents, md);
+    const responses = await getResponseFromAgents(agents, { markdown: md, url: tab.url });
     setAgentResponses(responses);
     apiLock.current = false;
     setAgentsLoading(false);
   }, []);
 
   useEffect(() => {
-    const handleTabChanged = (tabId: number, changeInfo: chrome.tabs.TabChangeInfo) => {
+    const handleTabChanged = (
+      _tabId: number,
+      changeInfo: chrome.tabs.TabChangeInfo,
+      tab: chrome.tabs.Tab,
+    ) => {
       if (changeInfo.status === 'complete') {
-        handleUpdateAgents(tabId, allAgents);
+        handleUpdateAgents(tab, allAgents);
       }
     };
     chrome.tabs.onUpdated.addListener(handleTabChanged);
@@ -70,7 +80,7 @@ export default function SidePanel() {
       // const currentTab = await chrome.tabs.captureVisibleTab();
       const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!currentTab?.id || currentTab.status !== 'complete') return;
-      handleUpdateAgents(currentTab.id, agents);
+      handleUpdateAgents(currentTab, agents);
     })();
   }, [handleUpdateAgents]);
 
@@ -78,6 +88,7 @@ export default function SidePanel() {
     <main className="panel">
       {uiMode === 'all' && (
         <MainView
+          onDeleteAgent={handleDeleteAgent}
           onModeChange={setUIMode}
           agents={allAgents}
           responses={agentResponses}
@@ -97,13 +108,23 @@ type MainViewProps = ViewProps & {
   agents: BaseAgent[];
   responses?: AgentResponse[];
   agentsLoading?: boolean;
+  onDeleteAgent: (agent: BaseAgent) => void;
 };
 
-function MainView({ onModeChange, agents, agentsLoading, responses }: MainViewProps) {
+function MainView({
+  onDeleteAgent,
+  onModeChange,
+  agents,
+  agentsLoading,
+  responses,
+}: MainViewProps) {
   const handleModeChange = (mode: SidePanelModes) => () => {
     onModeChange(mode);
   };
 
+  const handleDelete = (agent: BaseAgent) => {
+    onDeleteAgent(agent);
+  };
   return (
     <>
       <header className="panel__header panel__section">
@@ -121,6 +142,7 @@ function MainView({ onModeChange, agents, agentsLoading, responses }: MainViewPr
         <ErrorBoundary fallback={<div>Error with agents</div>} onError={(e) => console.error(e)}>
           {agents.map((a, i) => (
             <Agent
+              onDelete={() => handleDelete(a)}
               state={agentsLoading ? 'loading' : 'idle'}
               agent={a}
               response={responses?.[i]}
