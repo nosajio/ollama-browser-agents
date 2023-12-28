@@ -20,6 +20,7 @@ export default function SidePanel() {
     const updatedAgents = allAgents.filter((a) => a.name !== agent.name);
     setAllAgents(updatedAgents);
     replaceAgents(updatedAgents);
+    setAgentResponses([]);
   };
 
   const handleSaveAgent = async (agent: BaseAgent) => {

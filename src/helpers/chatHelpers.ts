@@ -1,6 +1,6 @@
 import type { AgentResponse, BaseAgent } from '../types/schema';
 import OllamaAi, { HumanMessage, Message, SystemMessage } from './ollamaHelpers';
-import { contextPrompt, globalSysPrompt } from './promptHelpers';
+import { globalSysPrompt } from './promptHelpers';
 
 const model = new OllamaAi({
   // model: 'mistral',
@@ -48,9 +48,8 @@ export async function getResponseFromAgents(
   }
   const messageThreads = agents.map((agent) => {
     return [
-      new SystemMessage(globalSysPrompt()),
+      new SystemMessage(globalSysPrompt(context.markdown, context.url)),
       new HumanMessage(agent.sysPrompt),
-      new HumanMessage(contextPrompt(context.markdown)),
     ];
   });
   const rawResponses = await Promise.all(messageThreads.map((thread) => model.chat(thread)));
