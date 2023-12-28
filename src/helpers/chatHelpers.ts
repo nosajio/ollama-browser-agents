@@ -2,10 +2,15 @@ import type { AgentResponse, BaseAgent } from '../types/schema';
 import OllamaAi, { HumanMessage, Message, SystemMessage } from './ollamaHelpers';
 import { globalSysPrompt } from './promptHelpers';
 
+const ollamaURL = import.meta.env.VITE_OLLAMA_API_URL;
+if (!ollamaURL) {
+  throw new Error('VITE_OLLAMA_API_URL not set');
+}
+
 const model = new OllamaAi({
   // model: 'mistral',
   model: 'llama2',
-  ollama_url: 'http://localhost:11434',
+  ollama_url: ollamaURL,
 });
 
 export async function getChatResponse(messages: Message[]) {
