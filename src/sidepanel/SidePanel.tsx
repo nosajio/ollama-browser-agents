@@ -220,14 +220,15 @@ function NewAgentView({ onSave, onModeChange }: NewAgentViewProps) {
             <input type="checkbox" name="expectBoolean" />
             <span>Expect Boolean</span>
           </label>
-          <label className="checkbox">
+          {/* Support these soon */}
+          {/* <label className="checkbox">
             <input type="checkbox" name="includeSearchEngines" />
             <span>Include Search Engines</span>
           </label>
           <label className="checkbox">
             <input type="checkbox" name="useLLMChat" />
             <span>Use LLM Chat</span>
-          </label>
+          </label> */}
         </div>
       </section>
     </form>
