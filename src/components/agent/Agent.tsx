@@ -34,12 +34,13 @@ export function Agent({
   );
 }
 
-function Formatted({ children }: { children: string }) {
+function Formatted({ children }: { children: string | boolean }) {
   const outputEl = useRef<HTMLDivElement>(null);
   const [showScrollover, setShowScrollover] = useState(false);
+  const isBoolean = typeof children === 'boolean';
 
   useEffect(() => {
-    if (!outputEl.current) {
+    if (!outputEl.current || isBoolean) {
       return;
     }
     const { scrollHeight, parentElement } = outputEl.current;
@@ -48,16 +49,22 @@ function Formatted({ children }: { children: string }) {
     }
     const { scrollHeight: parentScrollHeight } = parentElement;
     setShowScrollover(scrollHeight > parentScrollHeight);
-  }, []);
+  }, [isBoolean]);
 
   return (
     <div className="agent__response">
-      <div
-        className={`agent__output ${!showScrollover ? 'noscrollover' : ''}`}
-        ref={outputEl}
-        dangerouslySetInnerHTML={{ __html: children }}
-      />
-      {showScrollover && <div className="scrollover" />}
+      {isBoolean ? (
+        <span className="boolean">{children ? 'Yes' : 'No'}</span>
+      ) : (
+        <>
+          <div
+            className={`agent__output ${!showScrollover ? 'noscrollover' : ''}`}
+            ref={outputEl}
+            dangerouslySetInnerHTML={{ __html: children }}
+          />
+          {showScrollover && <div className="scrollover" />}
+        </>
+      )}
     </div>
   );
 }

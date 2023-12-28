@@ -194,13 +194,13 @@ function NewAgentView({ onSave, onModeChange }: NewAgentViewProps) {
       <header className="panel__header panel__section">
         <h1 className="title">New Agent</h1>
         <div className="actions">
-          <button className="button bg-red" onClick={handleModeChange('all')}>
+          <button className="button bg-red" onClick={handleModeChange('all')} type="button">
             Cancel
           </button>
           <button className="button bg-green">Save</button>
         </div>
       </header>
-      <section className="panel__main panel__section form-rows">
+      <section className="panel__form panel__section form-rows">
         <label className="form-row">
           <div className="label">Name</div>
           <input className="input" placeholder="Agent name..." type="text" name="name" required />

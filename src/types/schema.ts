@@ -16,7 +16,7 @@ export type AgentOptions = {
 
 export type AgentResponse = {
   agentName: string;
-  response: string;
+  response: string | boolean;
   url: string;
   time: Date;
 };

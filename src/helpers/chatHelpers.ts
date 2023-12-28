@@ -62,11 +62,24 @@ export async function getResponseFromAgents(
       new HumanMessage(userPrompt(agent.name, agent.sysPrompt)),
     ];
   });
+
   const rawResponses = await Promise.all(messageThreads.map((thread) => model.chat(thread)));
   console.log('Response from LLM');
   console.log(rawResponses);
-  const htmlResponses = await Promise.all(rawResponses.map((res) => markdownToHtml(res)));
-  const responses = htmlResponses.map<AgentResponse>((res, i) => ({
+
+  const formattedResponses = await Promise.all(
+    rawResponses.map((res, i) => {
+      const responseType = agents[i].opts?.expectBoolean ? 'boolean' : 'markdown';
+      switch (responseType) {
+        case 'boolean':
+          return res.toLowerCase().includes('true') || false;
+        default:
+          return markdownToHtml(res);
+      }
+    }),
+  );
+
+  const responses = formattedResponses.map<AgentResponse>((res, i) => ({
     agentName: agents[i].name,
     url: context.url,
     response: res,
