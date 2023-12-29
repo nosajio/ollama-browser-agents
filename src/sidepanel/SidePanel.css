@@ -18,6 +18,13 @@
   align-items: center;
   padding: 1rem;
 
+  & .model-tag {
+    background: #2f7246aa;
+    padding: 2px 5px;
+    border-radius: 20px;
+    font-size: 12px;
+  }
+
   & .title {
     color: var(--color-700);
     font-family: SF Pro;
