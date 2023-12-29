@@ -59,7 +59,7 @@ export async function getResponseFromAgents(
   });
 
   const rawResponses = await Promise.all(
-    messageThreads.map(([agent, thread]) => model.chat(thread, agent)),
+    messageThreads.map(([agent, thread]) => model.chat(thread, agent, context.url)),
   );
   console.log('Response from LLM');
   console.log(rawResponses);

@@ -9,7 +9,7 @@ export type LLMConfig = {
 type TrackedRequest = {
   aborter: AbortController;
   url: string;
-  key: string;
+  key: `${string}-${string}`;
 };
 
 export default class OllamaAi {
@@ -32,23 +32,20 @@ export default class OllamaAi {
     } = {
       method: 'get',
     },
-    idempotencyKey?: string,
+    idempotencyKey?: `${string}-${string}`, // {name}-{url}
   ) {
     const url = new URL(path, this.config?.ollama_url);
 
-    const getKeyMatch = (
-      predicateKey: string,
-      predicateUrl: string,
-    ): 'full' | 'partial' | 'none' => {
+    const getKeyMatch = (predicateKey: `${string}-${string}`): 'full' | 'partial' | 'none' => {
       if (predicateKey === idempotencyKey) {
-        if (predicateUrl === url.toString()) {
-          return 'full';
-        } else {
-          return 'partial';
-        }
-      } else {
-        return 'none';
+        return 'full';
       }
+      const [predName] = predicateKey.split('-');
+      const [keyName] = idempotencyKey?.split('-') || [];
+      if (predName === keyName) {
+        return 'partial';
+      }
+      return 'none';
     };
 
     // Build the new request
@@ -59,10 +56,11 @@ export default class OllamaAi {
     // Add the aborter and track request
     if (idempotencyKey) {
       // Abort any existing requests with the same key
-      const fullMatches = this.requests.filter(({ key, url }) => getKeyMatch(key, url) === 'full');
-      const partialMatches = this.requests.filter(
-        ({ key, url }) => getKeyMatch(key, url) === 'partial',
-      );
+      const fullMatches = this.requests.filter(({ key }) => getKeyMatch(key) === 'full');
+      const partialMatches = this.requests.filter(({ key }) => getKeyMatch(key) === 'partial');
+
+      console.log(this.requests, idempotencyKey);
+      console.log(partialMatches, fullMatches);
 
       if (partialMatches.length > 0) {
         partialMatches.forEach((r) => {
@@ -91,6 +89,7 @@ export default class OllamaAi {
       try {
         request.body = JSON.stringify(config.body);
       } catch (err) {
+        this.requests = this.requests.filter((r) => r.key !== idempotencyKey);
         throw new TypeError('body must be valid JSON');
       }
     }
@@ -99,6 +98,9 @@ export default class OllamaAi {
     console.log('body: %s', request?.body);
 
     const response = await fetch(url, request).catch((err) => {
+      if (err.name === 'AbortError') {
+        return;
+      }
       console.error(err);
     });
 
@@ -110,7 +112,12 @@ export default class OllamaAi {
     return await response?.json();
   }
 
-  async chat(messages: Message[], agent: BaseAgent, options?: Ollama.ChatRequestBody['options']) {
+  async chat(
+    messages: Message[],
+    agent: BaseAgent,
+    pageUrl: string,
+    options?: Ollama.ChatRequestBody['options'],
+  ) {
     const chatBody: Ollama.ChatRequestBody = {
       options,
       model: this.config.model,
@@ -122,13 +129,14 @@ export default class OllamaAi {
     };
 
     try {
+      // const keyUrl = new URL(pageUrl);
       const res = (await this.request(
         '/api/chat',
         {
           method: 'post',
           body: chatBody,
         },
-        agent.name.toLowerCase(),
+        `${agent.name.toLowerCase()}-${pageUrl}`,
       )) as Ollama.ChatResponseBody | undefined;
 
       if (!res) {
