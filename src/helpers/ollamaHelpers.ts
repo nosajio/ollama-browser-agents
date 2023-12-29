@@ -41,8 +41,6 @@ export default class OllamaAi {
     },
     idempotencyKey?: `${string}-${string}`, // {name}-{url}
   ) {
-    console.log('pending requests: %o', this.requests);
-
     const url = new URL(path, this.config?.ollama_url);
 
     const getKeyMatch = (predicateKey: `${string}-${string}`): 'full' | 'partial' | 'none' => {
@@ -57,31 +55,22 @@ export default class OllamaAi {
       return 'none';
     };
 
+    // Kill pending requests
+    if (idempotencyKey) {
+      const matches = this.requests.filter(({ key }) => getKeyMatch(key) === 'none');
+      matches.forEach((r) => {
+        r.aborter.abort();
+      });
+      this.requests = this.requests.filter((r) => !matches.includes(r));
+    }
+
     // Build the new request
     const request: RequestInit = {
       method: config.method.toUpperCase(),
     };
 
-    // Add the aborter and track request
     if (idempotencyKey) {
-      // Abort any existing requests with the same key
-      const fullMatches = this.requests.filter(({ key }) => getKeyMatch(key) === 'full');
-      const partialMatches = this.requests.filter(({ key }) => getKeyMatch(key) === 'partial');
-
-      if (partialMatches.length > 0) {
-        partialMatches.forEach((r) => {
-          r.aborter.abort();
-        });
-        this.requests = this.requests.filter((r) => !partialMatches.includes(r));
-      }
-      // When the only pending requests are full matches, exit here and allow
-      // those requests complete. This behaviour means not calling the model for
-      // every refresh.
-      if (fullMatches.length > 0 && partialMatches.length === 0) {
-        return;
-      }
-
-      // Assign a new aborter
+      // Add the aborter and track request
       const aborter = new AbortController();
       this.requests.push({
         url: url.toString(),
