@@ -14,11 +14,6 @@ const model = new OllamaAi({
   ollama_url: ollamaURL,
 });
 
-export async function getChatResponse(messages: Message[]) {
-  const response = await model.chat(messages);
-  return response;
-}
-
 export async function getTabHTML(tabId: number) {
   const domRes = await chrome.scripting.executeScript({
     target: { tabId, allFrames: true },
@@ -53,9 +48,6 @@ export async function getResponseFromAgents(
     return [];
   }
 
-  // Abort all pending requests
-  model.abortAll();
-
   const messageThreads = agents.map((agent) => {
     return [
       agent,
@@ -73,24 +65,29 @@ export async function getResponseFromAgents(
   console.log(rawResponses);
 
   const formattedResponses = await Promise.all(
-    rawResponses.map((res, i) => {
-      const responseType = agents[i].opts?.expectBoolean ? 'boolean' : 'markdown';
-      switch (responseType) {
-        case 'boolean':
-          return res.toLowerCase().includes('true') || false;
-        default:
-          return markdownToHtml(res);
+    rawResponses.map<Promise<AgentResponse>>(async (res, i) => {
+      let response = undefined;
+      if (res) {
+        const responseType = agents[i].opts?.expectBoolean ? 'boolean' : 'markdown';
+        switch (responseType) {
+          case 'boolean':
+            response = res.toLowerCase().includes('yes') || false;
+            break;
+          default:
+            response = await markdownToHtml(res);
+            break;
+        }
       }
+      return {
+        response,
+        agentName: agents[i].name,
+        url: context.url,
+        time: new Date(),
+      };
     }),
   );
 
-  const responses = formattedResponses.map<AgentResponse>((res, i) => ({
-    agentName: agents[i].name,
-    url: context.url,
-    response: res,
-    time: new Date(),
-  }));
-  return responses;
+  return formattedResponses;
 }
 
 function getDOM() {

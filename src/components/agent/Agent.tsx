@@ -24,7 +24,9 @@ export function Agent({
         </div>
       </header>
       <div className="agent__prompt">{sysPrompt}</div>
-      {response && state === 'idle' && <Formatted>{response.response}</Formatted>}
+      {response?.response !== undefined && state === 'idle' && (
+        <Formatted>{response.response}</Formatted>
+      )}
       {state === 'loading' && (
         <div className="agent__response">
           <Loading />

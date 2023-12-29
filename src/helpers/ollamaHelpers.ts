@@ -20,8 +20,7 @@ export default class OllamaAi {
   /**
    * Make an abortable request to the OLLAMA API. Pending requests are added to this.requests.
    *
-   * Request abort rules
-   * ===================
+   * ### Request abort rules
    * When the same full key is sent, the new request is ignored.
    * When a different key URL is sent for the same key name, the pending request is cancelled
    */
@@ -108,7 +107,7 @@ export default class OllamaAi {
       this.requests = this.requests.filter((r) => r.key !== idempotencyKey);
     }
 
-    return response?.json();
+    return await response?.json();
   }
 
   async chat(messages: Message[], agent: BaseAgent, options?: Ollama.ChatRequestBody['options']) {
@@ -122,16 +121,25 @@ export default class OllamaAi {
       })),
     };
 
-    const res = (await this.request(
-      '/api/chat',
-      {
-        method: 'post',
-        body: chatBody,
-      },
-      agent.name.toLowerCase(),
-    )) as Ollama.ChatResponseBody;
+    try {
+      const res = (await this.request(
+        '/api/chat',
+        {
+          method: 'post',
+          body: chatBody,
+        },
+        agent.name.toLowerCase(),
+      )) as Ollama.ChatResponseBody | undefined;
 
-    return res.message.content;
+      if (!res) {
+        return undefined;
+      }
+
+      return res.message.content;
+    } catch (err) {
+      console.error(err);
+      return;
+    }
   }
 
   async abortAll() {

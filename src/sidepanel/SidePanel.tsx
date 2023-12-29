@@ -48,7 +48,19 @@ export default function SidePanel() {
       return;
     }
     const responses = await getResponseFromAgents(agents, { markdown: md, url: tab.url });
-    setAgentResponses(responses);
+    const validResponses = responses.filter((r) => r.response !== undefined);
+    setAgentResponses((currentResponses) => {
+      if (!currentResponses || currentResponses.length === 0) {
+        return validResponses;
+      }
+      // Intersect the new validResponses and currentResponses
+      return [
+        ...validResponses,
+        ...currentResponses.filter(
+          (cr) => !validResponses.some((vr) => vr.agentName === cr.agentName),
+        ),
+      ];
+    });
     setAgentsLoading(false);
   }, []);
 
@@ -142,7 +154,7 @@ function MainView({
               onDelete={() => handleDelete(a)}
               state={agentsLoading ? 'loading' : 'idle'}
               agent={a}
-              response={responses?.[i]}
+              response={responses?.find((r) => r.agentName === a.name)}
               key={i}
             />
           ))}
@@ -217,7 +229,7 @@ function NewAgentView({ onSave, onModeChange }: NewAgentViewProps) {
         <div className="form-row">
           <div className="label">Settings</div>
           <label className="checkbox">
-            <input type="checkbox" name="expectBoolean" />
+            <input type="checkbox" name="expectBoolean" value="true" />
             <span>Expect Boolean</span>
           </label>
           {/* Support these soon */}

@@ -10,12 +10,12 @@ It's important that you give very short, direct answers.
 
 - YOU MUST follow the user's request exactly. 
 - DO NOT include any extra words or information in your response. Only respond with ${
-  options?.expectBoolean ? 'the word `true` or `false`.' : 'what the user asks of you.'
+  options?.expectBoolean ? 'the word `yes` or `no`.' : 'what the user asks of you.'
 }
 
 ${
   options?.expectBoolean
-    ? `You must respond with literally the word \`true\` or \`false\`, and no other words.`
+    ? `You must respond with literally the word \`yes\` or \`no\`, and no other words.`
     : `Please format your response as Markdown.`
 }
 
@@ -34,5 +34,5 @@ export const userPrompt = (name: string, instruct: string, options?: AgentOption
   # ${name}
   ${instruct}
 
-  ${options?.expectBoolean ? `Remember to respond with \`true\` or \`false\`.` : ''}
+  ${options?.expectBoolean ? `Remember to respond with \`yes\` or \`no\`.` : ''}
 `;
