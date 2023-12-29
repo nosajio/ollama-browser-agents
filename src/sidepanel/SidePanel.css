@@ -8,6 +8,10 @@
   border-bottom: 1px solid var(--color-100);
 }
 
+.panel-row {
+  padding: 0 1rem 1rem;
+}
+
 .panel__header {
   display: flex;
   justify-content: space-between;

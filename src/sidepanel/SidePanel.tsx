@@ -144,9 +144,11 @@ function MainView({
       </header>
       <section className="panel__main panel__section">
         {agents.length === 0 && (
-          <button className="button" onClick={handleModeChange('new-agent')}>
-            + Add first agent
-          </button>
+          <div className="panel-row">
+            <button className="button" onClick={handleModeChange('new-agent')}>
+              + Add first agent
+            </button>
+          </div>
         )}
         <ErrorBoundary fallback={<div>Error with agents</div>} onError={(e) => console.error(e)}>
           {agents.map((a, i) => (
