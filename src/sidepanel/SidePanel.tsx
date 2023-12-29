@@ -4,7 +4,7 @@ import { Agent } from '../components/agent/Agent';
 import { getResponseFromAgents, getTabHTML } from '../helpers/chatHelpers';
 import { htmlToMarkdown, randomColor } from '../helpers/dataHelpers';
 import { getStoredAgents, replaceAgents, upsertAgent } from '../helpers/storageHelpers';
-import { AgentResponse, type BaseAgent } from '../types/schema';
+import { AgentResponse, ExtensionOptions, type BaseAgent } from '../types/schema';
 import './SidePanel.css';
 
 type SidePanelModes = 'new-agent' | 'all';
@@ -14,6 +14,7 @@ export default function SidePanel() {
   const [uiMode, setUIMode] = useState<SidePanelModes>('all');
   const [allAgents, setAllAgents] = useState<BaseAgent[]>([]);
   const [agentResponses, setAgentResponses] = useState<AgentResponse[]>();
+  const [options, setOptions] = useState<ExtensionOptions>();
 
   const setLoading = (agents: BaseAgent[]) => {
     setAgentsLoading((curr) => [...curr, ...agents.map((a) => a.name)]);
@@ -83,6 +84,13 @@ export default function SidePanel() {
     [handleUpdateAgents],
   );
 
+  // Get options
+  useEffect(() => {
+    chrome.storage.sync.get('options', ({ options }) => {
+      setOptions(options);
+    });
+  }, []);
+
   useEffect(() => {
     const handleTabChanged = (
       _tabId: number,
@@ -121,6 +129,7 @@ export default function SidePanel() {
           agents={allAgents}
           responses={agentResponses}
           agentsLoading={agentsLoading}
+          activeModel={options?.model}
         />
       )}
       {uiMode === 'new-agent' && <NewAgentView onModeChange={setUIMode} onSave={handleSaveAgent} />}
@@ -137,9 +146,11 @@ type MainViewProps = ViewProps & {
   responses?: AgentResponse[];
   agentsLoading?: string[];
   onDeleteAgent: (agent: BaseAgent) => void;
+  activeModel?: string;
 };
 
 function MainView({
+  activeModel,
   onDeleteAgent,
   onModeChange,
   agents,
@@ -157,6 +168,7 @@ function MainView({
     <>
       <header className="panel__header panel__section">
         <h1 className="title">Agents</h1>
+        {activeModel && <div className="model-tag">{activeModel}</div>}
         <button className="button" onClick={handleModeChange('new-agent')}>
           +
         </button>

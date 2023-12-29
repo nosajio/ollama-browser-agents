@@ -1,4 +1,4 @@
-import { BaseAgent } from '../types/schema';
+import { BaseAgent, ExtensionOptions } from '../types/schema';
 import { assertBaseAgentArray } from './dataHelpers';
 
 /**
@@ -35,4 +35,20 @@ export async function getStoredAgents() {
       resolve((persisted?.agents || []) as BaseAgent[]);
     });
   });
+}
+
+export const defaultOptions: ExtensionOptions = {
+  ollamaUrl: 'http://localhost:11434',
+  model: '',
+};
+
+export async function saveOptions(options: ExtensionOptions) {
+  await chrome.storage.sync.set({
+    options,
+  });
+}
+
+export async function getOptions() {
+  const { options } = await chrome.storage.sync.get('options');
+  return { ...defaultOptions, ...(options as ExtensionOptions) };
 }

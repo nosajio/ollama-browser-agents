@@ -1,8 +1,15 @@
 import type * as Ollama from '../types/ollama';
 import { BaseAgent } from '../types/schema';
+import { getOptions } from './storageHelpers';
+
+export async function listModels() {
+  const { ollamaUrl } = await getOptions();
+  const res = (await fetch(`${ollamaUrl}/api/tags`).then((r) => r.json())) as Ollama.ModelsResponse;
+  return res;
+}
 
 export type LLMConfig = {
-  model: 'mistral' | 'codellama' | 'llama2';
+  model: string;
   ollama_url: string;
 };
 
@@ -59,9 +66,6 @@ export default class OllamaAi {
       const fullMatches = this.requests.filter(({ key }) => getKeyMatch(key) === 'full');
       const partialMatches = this.requests.filter(({ key }) => getKeyMatch(key) === 'partial');
 
-      console.log(this.requests, idempotencyKey);
-      console.log(partialMatches, fullMatches);
-
       if (partialMatches.length > 0) {
         partialMatches.forEach((r) => {
           r.aborter.abort();
@@ -95,7 +99,6 @@ export default class OllamaAi {
     }
 
     console.log('sending request to: %s', url);
-    console.log('body: %s', request?.body);
 
     const response = await fetch(url, request).catch((err) => {
       if (err.name === 'AbortError') {

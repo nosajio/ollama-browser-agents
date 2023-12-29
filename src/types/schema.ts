@@ -20,3 +20,8 @@ export type AgentResponse = {
   url: string;
   time: Date;
 };
+
+export type ExtensionOptions = {
+  ollamaUrl: string;
+  model: string;
+};

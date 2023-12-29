@@ -31,3 +31,19 @@ export type ChatRequestBody = {
     temperature?: number;
   };
 };
+
+export type ModelsResponse = {
+  models: {
+    name: string;
+    modified_at: string;
+    size: number;
+    digest: string;
+    details: {
+      format: string;
+      family: string;
+      families: unknown;
+      parameter_size: string;
+      quantization_level: string;
+    };
+  }[];
+};

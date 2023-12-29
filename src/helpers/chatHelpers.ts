@@ -2,16 +2,14 @@ import type { AgentResponse, BaseAgent } from '../types/schema';
 import { markdownToHtml } from './dataHelpers';
 import OllamaAi, { HumanMessage, Message, SystemMessage } from './ollamaHelpers';
 import { globalSysPrompt, userPrompt } from './promptHelpers';
+import { getOptions } from './storageHelpers';
 
-const ollamaURL = import.meta.env.VITE_OLLAMA_API_URL;
-if (!ollamaURL) {
-  throw new Error('VITE_OLLAMA_API_URL not set');
-}
-
-const model = new OllamaAi({
-  // model: 'mistral',
-  model: 'llama2',
-  ollama_url: ollamaURL,
+let model: OllamaAi;
+getOptions().then((options) => {
+  model = new OllamaAi({
+    model: options.model,
+    ollama_url: options.ollamaUrl,
+  });
 });
 
 export async function getTabHTML(tabId: number) {

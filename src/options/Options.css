@@ -1,31 +1,64 @@
-@media (prefers-color-scheme: light) {
-  a:hover {
-    color: #61dafb;
+.options {
+  display: grid;
+  grid-template:
+    'flex margin content margin2 flex2' 1fr
+    / 1fr 1rem minmax(0, 50rem) 1rem 1fr;
+  margin-top: 5.9604644775rem;
+
+  & > * {
+    grid-column: content;
   }
 }
 
-body {
-  min-width: 20rem;
+.options-section {
+  width: 100%;
+  padding-bottom: 3.0517578125rem;
+  display: flex;
+  flex-direction: column;
+  row-gap: 1.953125rem;
 }
 
-main {
-  text-align: center;
-  padding: 1em;
-  margin: 0 auto;
+.field {
+  display: grid;
+  grid-template-columns: minmax(100px, 200px) auto;
+  column-gap: 1.953125rem;
+
+  & .label {
+    color: var(--color-700);
+    line-height: 113%;
+  }
+
+  & .input {
+    border-radius: 7px;
+    background: var(--color-150);
+    border: none;
+    outline: none;
+    padding: 0.64rem 0.8rem;
+  }
+
+  & .input:focus {
+    background: var(--color-100);
+  }
+
+  & .input::placeholder {
+    color: var(--color-400);
+  }
 }
 
-h3 {
-  color: #61dafb;
-  text-transform: uppercase;
-  font-size: 1.5rem;
-  font-weight: 200;
-  line-height: 1.2rem;
-  margin: 2rem auto;
+.save {
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-150);
+  }
+
+  &.saved {
+    animation: saved-flash 0.6s 2;
+  }
 }
 
-a {
-  font-size: 0.5rem;
-  margin: 0.5rem;
-  color: #cccccc;
-  text-decoration: none;
+@keyframes saved-flash {
+  50% {
+    background: #067e06;
+  }
 }
