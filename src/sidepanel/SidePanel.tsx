@@ -1,7 +1,7 @@
 import { FormEventHandler, useCallback, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Agent } from '../components/agent/Agent';
-import { getResponseFromAgents, getTabHTML } from '../helpers/chatHelpers';
+import { cancelPendingRequests, getResponseFromAgents, getTabHTML } from '../helpers/chatHelpers';
 import { htmlToMarkdown, randomColor } from '../helpers/dataHelpers';
 import { getStoredAgents, replaceAgents, upsertAgent } from '../helpers/storageHelpers';
 import { AgentResponse, ExtensionOptions, type BaseAgent } from '../types/schema';
@@ -84,13 +84,6 @@ export default function SidePanel() {
     [handleUpdateAgents],
   );
 
-  // Get options
-  useEffect(() => {
-    chrome.storage.sync.get('options', ({ options }) => {
-      setOptions(options);
-    });
-  }, []);
-
   useEffect(() => {
     const handleTabChanged = (
       _tabId: number,
@@ -107,16 +100,25 @@ export default function SidePanel() {
     };
   }, [allAgents, handleUpdateAgents]);
 
-  // Get all agents in state on load
+  // Initialise data
   useEffect(() => {
+    chrome.sidePanel.getPanelBehavior((b) => {
+      console.log(b);
+    });
     (async () => {
+      cancelPendingRequests();
+
+      const { options } = await chrome.storage.sync.get('options');
+      setOptions(options);
+
       const agents = await getStoredAgents();
       console.log('stored agents: %o', agents);
       setAllAgents(agents);
-      // const currentTab = await chrome.tabs.captureVisibleTab();
+
       const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!currentTab?.id || currentTab.status !== 'complete') return;
-      handleUpdateAgents(currentTab, agents);
+
+      await handleUpdateAgents(currentTab, agents);
     })();
   }, [handleUpdateAgents]);
 

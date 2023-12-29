@@ -88,6 +88,10 @@ export async function getResponseFromAgents(
   return formattedResponses;
 }
 
+export function cancelPendingRequests() {
+  model.abortAll();
+}
+
 function getDOM() {
   return document.documentElement.innerHTML;
 }

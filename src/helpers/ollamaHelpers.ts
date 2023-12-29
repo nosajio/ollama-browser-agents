@@ -41,6 +41,8 @@ export default class OllamaAi {
     },
     idempotencyKey?: `${string}-${string}`, // {name}-{url}
   ) {
+    console.log('pending requests: %o', this.requests);
+
     const url = new URL(path, this.config?.ollama_url);
 
     const getKeyMatch = (predicateKey: `${string}-${string}`): 'full' | 'partial' | 'none' => {
@@ -73,7 +75,8 @@ export default class OllamaAi {
         this.requests = this.requests.filter((r) => !partialMatches.includes(r));
       }
       // When the only pending requests are full matches, exit here and allow
-      // those requests complete
+      // those requests complete. This behaviour means not calling the model for
+      // every refresh.
       if (fullMatches.length > 0 && partialMatches.length === 0) {
         return;
       }
@@ -107,9 +110,9 @@ export default class OllamaAi {
       console.error(err);
     });
 
-    // remove completed request from tracking
+    // cancel and remove all pending requests for this agent
     if (idempotencyKey) {
-      this.requests = this.requests.filter((r) => r.key !== idempotencyKey);
+      this.requests = this.requests.filter((r) => getKeyMatch(r.key) === 'none');
     }
 
     return await response?.json();
