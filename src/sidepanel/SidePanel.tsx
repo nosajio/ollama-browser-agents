@@ -10,16 +10,25 @@ import './SidePanel.css';
 type SidePanelModes = 'new-agent' | 'all';
 
 export default function SidePanel() {
-  const [agentsLoading, setAgentsLoading] = useState(false);
+  const [agentsLoading, setAgentsLoading] = useState<string[]>([]);
   const [uiMode, setUIMode] = useState<SidePanelModes>('all');
   const [allAgents, setAllAgents] = useState<BaseAgent[]>([]);
   const [agentResponses, setAgentResponses] = useState<AgentResponse[]>();
 
+  const setLoading = (agents: BaseAgent[]) => {
+    setAgentsLoading((curr) => [...curr, ...agents.map((a) => a.name)]);
+  };
+  const setNotLoading = (agents: BaseAgent[]) => {
+    setAgentsLoading((curr) => curr.filter((a) => !agents.some((b) => b.name === a)));
+  };
+
   const handleDeleteAgent = (agent: BaseAgent) => {
+    // Remove agent from mamory and save
     const updatedAgents = allAgents.filter((a) => a.name !== agent.name);
     setAllAgents(updatedAgents);
     replaceAgents(updatedAgents);
-    setAgentResponses([]);
+    // Remove agent responses
+    setAgentResponses((curr) => curr?.filter((r) => r.agentName !== agent.name));
   };
 
   const handleSaveAgent = async (agent: BaseAgent) => {
@@ -27,6 +36,7 @@ export default function SidePanel() {
     if (!updatedAgents) return;
     setAllAgents(updatedAgents);
     setUIMode('all');
+    await updateAgentsForTab([agent]);
   };
 
   const getActiveTabMarkdown = async (tabId: number) => {
@@ -40,10 +50,10 @@ export default function SidePanel() {
 
   const handleUpdateAgents = useCallback(async (tab: chrome.tabs.Tab, agents: BaseAgent[]) => {
     if (agents.length === 0 || !tab?.id || !tab?.url) return;
-    setAgentsLoading(true);
+    setLoading(agents);
     const md = await getActiveTabMarkdown(tab.id);
     if (!md) {
-      setAgentsLoading(false);
+      setNotLoading(agents);
       console.error('No page markdown');
       return;
     }
@@ -61,8 +71,17 @@ export default function SidePanel() {
         ),
       ];
     });
-    setAgentsLoading(false);
+    setNotLoading(agents);
   }, []);
+
+  const updateAgentsForTab = useCallback(
+    async (agents: BaseAgent[]) => {
+      const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!currentTab?.id || currentTab.status !== 'complete') return;
+      handleUpdateAgents(currentTab, agents);
+    },
+    [handleUpdateAgents],
+  );
 
   useEffect(() => {
     const handleTabChanged = (
@@ -116,7 +135,7 @@ type ViewProps = {
 type MainViewProps = ViewProps & {
   agents: BaseAgent[];
   responses?: AgentResponse[];
-  agentsLoading?: boolean;
+  agentsLoading?: string[];
   onDeleteAgent: (agent: BaseAgent) => void;
 };
 
@@ -154,7 +173,7 @@ function MainView({
           {agents.map((a, i) => (
             <Agent
               onDelete={() => handleDelete(a)}
-              state={agentsLoading ? 'loading' : 'idle'}
+              state={agentsLoading?.includes(a.name) ? 'loading' : 'idle'}
               agent={a}
               response={responses?.find((r) => r.agentName === a.name)}
               key={i}
