@@ -8,7 +8,7 @@ export async function upsertAgent(
   agent: BaseAgent,
   returning?: boolean,
 ): Promise<BaseAgent[] | void> {
-  const persisted = (await chrome.storage.local.get('agents')) || { agents: [] };
+  const persisted = await chrome.storage.local.get({ agents: [] });
   assertBaseAgentArray(persisted.agents);
   const { agents } = persisted;
 
