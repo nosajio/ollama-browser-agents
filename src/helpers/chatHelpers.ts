@@ -31,6 +31,10 @@ export async function getTabHTML(tabId: number) {
   return domRes[0].result;
 }
 
+export function abortPendingRequests() {
+  model.abortAll();
+}
+
 /**
  * Trigger parallel chat completions with all passed agents
  */
