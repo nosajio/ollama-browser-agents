@@ -48,17 +48,12 @@ export async function getResponseFromAgents(
 
   const messageThreads = agents.map((agent) => {
     return [
-      agent,
-      [
-        new SystemMessage(globalSysPrompt(context.markdown, context.url)),
-        new HumanMessage(userPrompt(agent.name, agent.sysPrompt)),
-      ] as Message[],
-    ] as const;
+      new SystemMessage(globalSysPrompt(context.markdown, context.url)),
+      new HumanMessage(userPrompt(agent.name, agent.sysPrompt)),
+    ];
   });
 
-  const rawResponses = await Promise.all(
-    messageThreads.map(([agent, thread]) => model.chat(thread, agent, context.url)),
-  );
+  const rawResponses = await Promise.all(messageThreads.map((thread) => model.chat(thread)));
   console.log('Response from LLM');
   console.log(rawResponses);
 
@@ -86,10 +81,6 @@ export async function getResponseFromAgents(
   );
 
   return formattedResponses;
-}
-
-export function cancelPendingRequests() {
-  model.abortAll();
 }
 
 function getDOM() {

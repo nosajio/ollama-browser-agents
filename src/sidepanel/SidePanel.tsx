@@ -1,7 +1,7 @@
 import { FormEventHandler, useCallback, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Agent } from '../components/agent/Agent';
-import { cancelPendingRequests, getResponseFromAgents, getTabHTML } from '../helpers/chatHelpers';
+import { getResponseFromAgents, getTabHTML } from '../helpers/chatHelpers';
 import { htmlToMarkdown, randomColor } from '../helpers/dataHelpers';
 import { getStoredAgents, replaceAgents, upsertAgent } from '../helpers/storageHelpers';
 import { AgentResponse, ExtensionOptions, type BaseAgent } from '../types/schema';
@@ -51,6 +51,11 @@ export default function SidePanel() {
 
   const handleUpdateAgents = useCallback(async (tab: chrome.tabs.Tab, agents: BaseAgent[]) => {
     if (agents.length === 0 || !tab?.id || !tab?.url) return;
+
+    // Ensure agent(s) aren't already loading
+    const agentNames = agents.map((a) => a.name);
+    if (agentsLoading.some((a) => agentNames.includes(a))) return;
+
     setLoading(agents);
     const md = await getActiveTabMarkdown(tab.id);
     if (!md) {
@@ -102,12 +107,7 @@ export default function SidePanel() {
 
   // Initialise data
   useEffect(() => {
-    chrome.sidePanel.getPanelBehavior((b) => {
-      console.log(b);
-    });
     (async () => {
-      cancelPendingRequests();
-
       const { options } = await chrome.storage.sync.get('options');
       setOptions(options);
 

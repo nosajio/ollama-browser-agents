@@ -23,7 +23,9 @@ ${
 
 The webpage content has been converted to Markdown and included below. Use it to respond to the above request.
 
-URL: ${url}
+URL: 
+${url}
+
 CONTENT:
 ${content}
 

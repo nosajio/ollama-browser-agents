@@ -1,5 +1,4 @@
 import type * as Ollama from '../types/ollama';
-import { BaseAgent } from '../types/schema';
 import { getOptions } from './storageHelpers';
 
 export async function listModels() {
@@ -13,14 +12,8 @@ export type LLMConfig = {
   ollama_url: string;
 };
 
-type TrackedRequest = {
-  aborter: AbortController;
-  url: string;
-  key: `${string}-${string}`;
-};
-
 export default class OllamaAi {
-  private requests: TrackedRequest[] = [];
+  private pendingRequests: Map<string, AbortController> = new Map();
 
   constructor(private config: LLMConfig) {}
 
@@ -39,80 +32,46 @@ export default class OllamaAi {
     } = {
       method: 'get',
     },
-    idempotencyKey?: `${string}-${string}`, // {name}-{url}
+    cacheKey: string,
   ) {
     const url = new URL(path, this.config?.ollama_url);
-
-    const getKeyMatch = (predicateKey: `${string}-${string}`): 'full' | 'partial' | 'none' => {
-      if (predicateKey === idempotencyKey) {
-        return 'full';
-      }
-      const [predName] = predicateKey.split('-');
-      const [keyName] = idempotencyKey?.split('-') || [];
-      if (predName === keyName) {
-        return 'partial';
-      }
-      return 'none';
-    };
-
-    // Kill pending requests
-    if (idempotencyKey) {
-      const matches = this.requests.filter(({ key }) => getKeyMatch(key) === 'none');
-      matches.forEach((r) => {
-        r.aborter.abort();
-      });
-      this.requests = this.requests.filter((r) => !matches.includes(r));
-    }
 
     // Build the new request
     const request: RequestInit = {
       method: config.method.toUpperCase(),
     };
 
-    if (idempotencyKey) {
-      // Add the aborter and track request
-      const aborter = new AbortController();
-      this.requests.push({
-        url: url.toString(),
-        aborter,
-        key: idempotencyKey,
-      });
-      request.signal = aborter.signal;
-    }
-
     // Add the encoded body
     if (config.method !== 'get' && config.body) {
       try {
         request.body = JSON.stringify(config.body);
       } catch (err) {
-        this.requests = this.requests.filter((r) => r.key !== idempotencyKey);
         throw new TypeError('body must be valid JSON');
       }
     }
 
-    console.log('sending request to: %s', url);
+    const currentRequest = this.pendingRequests.get(cacheKey);
+    if (currentRequest) {
+      currentRequest.abort();
+      this.pendingRequests.delete(cacheKey);
+    }
+
+    const aborter = new AbortController();
+    this.pendingRequests.set(cacheKey, aborter);
+    request.signal = aborter.signal;
 
     const response = await fetch(url, request).catch((err) => {
       if (err.name === 'AbortError') {
+        console.log('aborted %s', cacheKey);
         return;
       }
       console.error(err);
     });
 
-    // cancel and remove all pending requests for this agent
-    if (idempotencyKey) {
-      this.requests = this.requests.filter((r) => getKeyMatch(r.key) === 'none');
-    }
-
     return await response?.json();
   }
 
-  async chat(
-    messages: Message[],
-    agent: BaseAgent,
-    pageUrl: string,
-    options?: Ollama.ChatRequestBody['options'],
-  ) {
+  async chat(messages: Message[], options?: Ollama.ChatRequestBody['options']) {
     const chatBody: Ollama.ChatRequestBody = {
       options,
       model: this.config.model,
@@ -131,7 +90,7 @@ export default class OllamaAi {
           method: 'post',
           body: chatBody,
         },
-        `${agent.name.toLowerCase()}-${pageUrl}`,
+        messages[messages.length - 1].body,
       )) as Ollama.ChatResponseBody | undefined;
 
       if (!res) {
@@ -145,11 +104,9 @@ export default class OllamaAi {
     }
   }
 
-  async abortAll() {
-    this.requests.forEach((r) => {
-      r.aborter.abort();
-    });
-    this.requests = [];
+  abortAll() {
+    this.pendingRequests.forEach((controller) => controller.abort());
+    this.pendingRequests = new Map();
   }
 }
 

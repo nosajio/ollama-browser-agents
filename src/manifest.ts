@@ -17,7 +17,6 @@ export default defineManifest({
     default_icon: 'img/logo-48.png',
   },
   options_page: 'options.html',
-  devtools_page: 'devtools.html',
   background: {
     service_worker: 'src/background/index.ts',
     type: 'module',
@@ -37,6 +36,6 @@ export default defineManifest({
       matches: [],
     },
   ],
-  permissions: ['sidePanel', 'storage', 'scripting', 'activeTab'],
+  permissions: ['sidePanel', 'storage', 'scripting', 'activeTab', 'webRequest'],
   host_permissions: ['<all_urls>'],
 });
