@@ -13,7 +13,6 @@ export default defineManifest({
     128: 'img/logo-128.png',
   },
   action: {
-    default_popup: 'popup.html',
     default_icon: 'img/logo-48.png',
   },
   options_page: 'options.html',
