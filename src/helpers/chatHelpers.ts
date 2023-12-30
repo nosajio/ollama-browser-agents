@@ -1,6 +1,6 @@
 import type { AgentResponse, BaseAgent } from '../types/schema';
 import { markdownToHtml } from './dataHelpers';
-import OllamaAi, { HumanMessage, Message, SystemMessage } from './ollamaHelpers';
+import OllamaAi, { HumanMessage, SystemMessage } from './ollamaHelpers';
 import { globalSysPrompt, userPrompt } from './promptHelpers';
 import { getOptions } from './storageHelpers';
 
